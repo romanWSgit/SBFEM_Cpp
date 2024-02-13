@@ -1,7 +1,10 @@
-cmake_minimum_required(VERSION 3.24)
+cmake_minimum_required(VERSION 3.6)
 project(SBFEM)
 
+
+
 set(CMAKE_CXX_STANDARD 17)
+
 
 ### set python Version:
 #set(Python_INCLUDE_DIRS "/Users/roman_w_s/mambaforge/include")
@@ -43,6 +46,18 @@ find_package(nlohmann_json REQUIRED)
 
 find_package(Matplot++ REQUIRED)
 
+include(FetchContent)
+
+FetchContent_Declare(
+        glm
+        GIT_REPOSITORY	https://github.com/g-truc/glm.git
+        GIT_TAG 	33b0eb9fa336ffd8551024b1d2690e418014553b
+)
+
+FetchContent_MakeAvailable(glm)
+
+
+
 # Find the Boost library
 find_package(Boost REQUIRED COMPONENTS
         unit_test_framework
@@ -52,6 +67,8 @@ find_package(Boost REQUIRED COMPONENTS
 
 
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/external/gnuplot-iostream")
+
+
 
 # Include Boost in the project
 include_directories(${Boost_INCLUDE_DIRS})
@@ -100,7 +117,7 @@ add_subdirectory(tests)
 
 # Include the header files
 
-
+target_include_directories(SBFEM PRIVATE ${PROJECT_SOURCE_DIR}/external/tinynurbs/include)
 target_link_libraries(SBFEM
         PRIVATE
 #        ${VTK_LIBRARIES}
@@ -114,7 +131,16 @@ target_link_libraries(SBFEM
         ${LAPACK_LIBRARIES}
         ${SLICOT_LIBRARY}
         Matplot++::matplot
+        tinynurbs
         )
+# Assuming your target is an executable or library named 'my_target'
+if(TARGET glm::glm)
+    message(STATUS "GLM found.")
+    target_link_libraries(SBFEM PRIVATE glm::glm)
+else()
+    message(FATAL_ERROR "GLM not found. Please install GLM or make sure CMake can find it.")
+endif()
+
 
 # Define BOOST_TEST_DYN_LINK to enable dynamic linking
 #target_compile_definitions(SBFEM PRIVATE "BOOST_TEST_DYN_LINK")

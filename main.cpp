@@ -50,13 +50,19 @@
 #include "fast_matrix_market/app/Eigen.hpp"
 #include "fast_matrix_market/fast_matrix_market.hpp"
 
+// Tinynurbs
+#include <tinynurbs/tinynurbs.h>
+#include <glm/vec3.hpp>
+
+
+
 // Own
 #include "reorder_schur.h"
 #include "z_mat.h"
 
 extern "C"
 {
-    void
+    [[maybe_unused]] void
     mb03qd_ (char *DICO, char *STDOM, char *JOBU, int *N, int *NLOW, int *NSUP,
              double *ALPHA, double *A, int *LDA, double *U, int *LDU, int *NDIM,
              double *DWORK, int *INFO);
@@ -67,6 +73,24 @@ constexpr bool IMPORT_SCHUR_FLAG = true;
 int
 main ()
 {
+    tinynurbs::Curve<float> crv; // Planar curve using float32
+    crv.control_points = {glm::vec3(-1, 0, 0), // std::vector of 3D points
+                           glm::vec3(0, 1, 0),
+                           glm::vec3(1, 0, 0)
+    };
+    crv.knots = {0, 0, 0, 1, 1, 1}; // std::vector of floats
+    crv.degree = 2;
+
+    if (!tinynurbs::curveIsValid(crv))
+        {
+            // check if degree, knots and control points are configured as per
+            // #knots == #control points + degree + 1
+        }
+    glm::vec3 pt = tinynurbs::curvePoint(crv, 0.f);
+    // Outputs a point [-1, 0]
+    glm::vec3 tgt = tinynurbs::curveTangent(crv, 0.5f);
+    // Outputs a vector [1, 0]
+
     Eigen::MatrixXd matrixZ;
     Eigen::MatrixXd matrixQPython;
     Eigen::MatrixXd matrixRPython;
