@@ -1,0 +1,8 @@
+[submodule "external/gnuplot-iostream"]
+	path = external/gnuplot-iostream
+	url = https://github.com/dstahlke/gnuplot-iostream.git
+
+[submodule "external/tinynurbs"]
+	path = external/tinynurbs
+	url = https://github.com/pradeep-pyro/tinynurbs.git
+	

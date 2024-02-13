@@ -1,0 +1,76 @@
+# CLion-specific files
+.idea/
+cmake-build-*/
+cmake-build-debug/*
+tests/lib/
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+*.i386
+*.x86_64
+*.hex
+
+# Debug files
+*.dSYM/
+
+# Build files (from other build systems)
+build/
+target/
+
+# OS Files
+.DS_Store
+Desktop.ini
+
+# User-specific
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.pidb
+*.svclog
+*.scc
+
+# Visual Studio generated files
+.vs/
+.vscode/
+
+# Matlab_matices
+matlab_matrices.nb
+
+# Test output files
+test/*.out
+
+# Doxygen Doc:
+
+/doc_doxygen
