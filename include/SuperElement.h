@@ -14,6 +14,7 @@
 #include <nlohmann/json.hpp>
 #include "helper_functions.h"
 #include <iostream>
+#include "ShapeFunctionType.h"
 
 /**
  * @class SuperElement
@@ -28,7 +29,7 @@ private:
     std::string m_SE_sbfemDomainType;
     std::string m_SE_structName;
     std::string m_SE_meshPartition;
-    std::string m_SE_shapeFct;
+    ShapeFunctionType m_SE_shapeFct;
     int m_SE_polyOrd;
     std::string m_SE_geom;
     Eigen::VectorXd m_SE_centre;
@@ -68,7 +69,7 @@ public:
     [[nodiscard]] std::string getMSESbfemDomainType() const;
     [[nodiscard]] std::string getMSEStructName() const;
     [[nodiscard]] std::string getMSEMeshPartition() const;
-    [[nodiscard]] std::string getMSEShapeFct() const;
+    [[nodiscard]] ShapeFunctionType getMSEShapeFct() const;
     [[nodiscard]] int getMSEPolyOrd() const;
     [[nodiscard]] std::string getMSEGeom() const;
     [[nodiscard]] Eigen::VectorXd getMSECentre() const;
@@ -103,7 +104,7 @@ public:
     void setMSESbfemDomainType (const std::string& sbfemDomainType);
     void setMSEStructName (const std::string& structName);
     void setMSEMeshPartition (const std::string& meshPartition);
-    void setMSEShapeFct (const std::string& shapeFct);
+    void setMSEShapeFct (const enum ShapeFunctionType& shapeFct);
     void setMSEPolyOrd (int polyOrd);
     void setMSEGeom (const std::string& geom);
     void setMSECentre (const Eigen::VectorXd& centre);

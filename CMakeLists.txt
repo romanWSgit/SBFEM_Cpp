@@ -46,15 +46,7 @@ find_package(nlohmann_json REQUIRED)
 
 find_package(Matplot++ REQUIRED)
 
-include(FetchContent)
-
-FetchContent_Declare(
-        glm
-        GIT_REPOSITORY	https://github.com/g-truc/glm.git
-        GIT_TAG 	33b0eb9fa336ffd8551024b1d2690e418014553b
-)
-
-FetchContent_MakeAvailable(glm)
+find_package(glm CONFIG REQUIRED)
 
 
 
@@ -95,6 +87,11 @@ if(LAPACK_FOUND)
     message("-- Found LAPACK library")
 endif()
 
+find_package(raylib REQUIRED) # Find the raylib package
+if(raylib_FOUND)
+    message("-- Found raylib library")
+endif()
+
 find_package(BLAS)
 if(LAPACK_FOUND)
     message("-- Found BLAS library")
@@ -114,10 +111,12 @@ include_directories(${PROJECT_SOURCE_DIR}/include)
 # Add subdirectories
 add_subdirectory(src)
 add_subdirectory(tests)
+add_subdirectory(gtests)
 
 # Include the header files
 
 target_include_directories(SBFEM PRIVATE ${PROJECT_SOURCE_DIR}/external/tinynurbs/include)
+
 target_link_libraries(SBFEM
         PRIVATE
 #        ${VTK_LIBRARIES}
@@ -131,7 +130,7 @@ target_link_libraries(SBFEM
         ${LAPACK_LIBRARIES}
         ${SLICOT_LIBRARY}
         Matplot++::matplot
-        tinynurbs
+        raylib
         )
 # Assuming your target is an executable or library named 'my_target'
 if(TARGET glm::glm)
@@ -140,6 +139,8 @@ if(TARGET glm::glm)
 else()
     message(FATAL_ERROR "GLM not found. Please install GLM or make sure CMake can find it.")
 endif()
+
+
 
 
 # Define BOOST_TEST_DYN_LINK to enable dynamic linking

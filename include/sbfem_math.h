@@ -11,6 +11,7 @@
 #include <iostream>
 #include <tuple>
 #include <string>
+#include "ShapeFunctionType.h"
 
 /**
  * @brief Calculate the Lagrange polynomial at a given point.
@@ -97,7 +98,7 @@ legendre_poly_integrated_diff (double x, int p);
  * gradient matrix
  */
 std::tuple<Eigen::VectorXd, Eigen::MatrixXd>
-shape_N (std::string_view shapeFct, double eta, int poly_ord);
+shape_N (ShapeFunctionType shapeFct, double eta, int poly_ord);
 
 /**
  * @brief Calculates the shape function and its derivative matrix for a given
