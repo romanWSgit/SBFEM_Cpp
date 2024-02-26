@@ -9,27 +9,22 @@
  */
 
 #include <algorithm>
+#include <chrono>
 #include <cmath>
 #include <complex>
 #include <fstream>
 #include <iostream>
 #include <limits>
+#include <omp.h> // opem mp
 #include <optional>
 #include <string>
 #include <tuple>
 #include <utility>
 #include <vector>
-
 #include <boost/version.hpp>
 #include <matplot/matplot.h> // For Matplot++
 
-#include "MaterialData.h"
-#include "SuperElement.h"
-#include "sbfem_math.h"
 
-#include "helper_functions.h"
-#include "plot.h"
-#include "sbfem_functions.h"
 
 // Eigen
 #include <Eigen/Core>
@@ -57,20 +52,29 @@
 // Own
 #include "GraphicsController.h"
 #include "reorder_schur.h"
+#include "sbfem_driver.h"
 #include "z_mat.h"
+#include "MaterialData.h"
+#include "SuperElementJson.h"
+#include "sbfem_math.h"
+#include "helper_functions.h"
+#include "plot.h"
+#include "sbfem_functions.h"
 
-extern "C"
-{
-    [[maybe_unused]] void mb03qd_(char *DICO, char *STDOM, char *JOBU, int *N,
-                                  int *NLOW, int *NSUP, double *ALPHA,
-                                  double *A, int *LDA, double *U, int *LDU,
-                                  int *NDIM, double *DWORK, int *INFO);
-}
+// extern "C"
+//{
+//     [[maybe_unused]] void mb03qd_(char *DICO, char *STDOM, char *JOBU, int
+//     *N,
+//                                   int *NLOW, int *NSUP, double *ALPHA,
+//                                   double *A, int *LDA, double *U, int *LDU,
+//                                   int *NDIM, double *DWORK, int *INFO);
+// }
 
 constexpr bool IMPORT_SCHUR_FLAG = true;
 
-int main()
+int main(int argc, char **argv)
 {
+
     tinynurbs::Curve<float> crv;               // Planar curve using float32
     crv.control_points = {glm::vec3(-1, 0, 0), // std::vector of 3D points
                           glm::vec3(0, 1, 0), glm::vec3(1, 0, 0)};
@@ -192,10 +196,21 @@ int main()
     domain_file >> j_geom;
     material_file >> j_material;
 
-    auto sE = SuperElement(j_geom);
+    auto sE = SuperElementJson(j_geom);
 
     auto rtestVec = r_hat_c(1, -1, 4, sE.getMSEElementsM().row(0),
                             ShapeFunctionType::HIERARCHICAL);
+    auto rtestVec2 = r_hat(1, -1, 4, sE.getMSEElementsM().row(0),
+                           ShapeFunctionType::HIERARCHICAL);
+
+    auto j = j_mat(1, 4, sE.getMSEElementsM().row(0),
+                   ShapeFunctionType::HIERARCHICAL);
+
+    double det = det_j(-1, 4, sE.getMSEElementsM().row(0),
+                       ShapeFunctionType::HIERARCHICAL);
+    std::cout << "Determinant of J:" << det << std::endl;
+
+
 
     // Print Eigen array
     std::cout << sE.getMSEElementsM() << std::endl;
@@ -245,6 +260,25 @@ int main()
               << "."                               // major version
               << BOOST_VERSION / 100 % 1000 << "." // minor version
               << BOOST_VERSION % 100               // patch level
+              << std::endl;
+
+    double a = 0;    // Start of the integration interval
+    double b = M_PI; // End of the integration interval
+
+    // Integrate each component
+    double integralComponent1 = integrateComponent(a, b, 0);
+    double integralComponent2 = integrateComponent(a, b, 1);
+    double integralComponent1p = integrateComponentKronrod(a, b, 0);
+    double integralComponent2p = integrateComponentKronrod(a, b, 1);
+    // Output the results
+    std::cout << "Integral of the first component: " << integralComponent1
+              << std::endl;
+    std::cout << "Integral of the second component: " << integralComponent2
+              << std::endl;
+
+    std::cout << "Integral of the first component: " << integralComponent1p
+              << std::endl;
+    std::cout << "Integral of the second component: " << integralComponent2p
               << std::endl;
 
     return 0;

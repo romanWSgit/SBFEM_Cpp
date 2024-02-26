@@ -1,10 +1,14 @@
 cmake_minimum_required(VERSION 3.6)
 project(SBFEM)
 
+#set(Boost_USE_STATIC_LIBS OFF)
+#set(Boost_USE_MULTITHREADED ON)
+#set(Boost_USE_STATIC_RUNTIME OFF)
 
+set(CMAKE_CXX_STANDARD 20)
 
-set(CMAKE_CXX_STANDARD 17)
-
+set(CMAKE_CXX_COMPILER /opt/homebrew/opt/llvm/bin/clang++)
+set(CMAKE_C_COMPILER /opt/homebrew/opt/llvm/bin/clang)
 
 ### set python Version:
 #set(Python_INCLUDE_DIRS "/Users/roman_w_s/mambaforge/include")
@@ -26,6 +30,7 @@ set(CMAKE_CXX_STANDARD 17)
 #  # Specify the commit you depend on and update it regularly.
 #  URL https://github.com/google/googletest/archive/5376968f6948923e2411081fd9372e71a59d8e77.zip
 #)
+
 
 
 find_package(Eigen3 REQUIRED)
@@ -132,6 +137,15 @@ target_link_libraries(SBFEM
         Matplot++::matplot
         raylib
         )
+
+
+# OPENMP
+find_package(OpenMP)
+if (OpenMP_CXX_FOUND)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+    target_link_libraries(SBFEM PUBLIC OpenMP::OpenMP_CXX)
+endif()
+
 # Assuming your target is an executable or library named 'my_target'
 if(TARGET glm::glm)
     message(STATUS "GLM found.")

@@ -5,7 +5,7 @@
 #include "plot.h"
 #include "helper_functions.h"
 
-void plotSbfemSuperelement (const SuperElement &sE, bool gnuplot)
+void plotSbfemSuperelement (const SuperElementJson &sE, bool gnuplot)
 {
     if (gnuplot)
         {

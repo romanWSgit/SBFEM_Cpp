@@ -5,13 +5,12 @@
 #ifndef SBFEM_SBFEM_PLOT_H
 #define SBFEM_SBFEM_PLOT_H
 
-#include <Eigen/Dense>
+#include "SuperElementJson.h"
 #include "gnuplot-iostream.h"
-#include "SuperElement.h"
+#include <Eigen/Dense>
 #include <matplot/matplot.h>
 
-
-void plotSbfemSuperelement(const SuperElement& sE, bool gnuplot=true);
+void plotSbfemSuperelement(const SuperElementJson & sE, bool gnuplot=true);
 
 void visualizeDoubleMatrix (const Eigen::MatrixXd &matrix);
 

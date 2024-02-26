@@ -335,18 +335,40 @@ std::tuple<Eigen::VectorXd, Eigen::MatrixXd> shape_N(ShapeFunctionType shapeFct,
     }
 }
 
-std::tuple<Eigen::VectorXd, Eigen::MatrixXd> shape_dN(double eta, int poly_ord)
+std::tuple<Eigen::VectorXd, Eigen::MatrixXd> shape_dN(ShapeFunctionType shapeFct,double eta, int poly_ord)
 {
-    std::vector<double> n_vec;
-    Eigen::MatrixXd n_mat(2, 0);
-    for (int i = 0; i <= poly_ord; i++)
+    if (shapeFct == ShapeFunctionType::STANDARD)
     {
-        double result =
-            lagrange_diff(eta, i, evenDistributedLagrangianPoints(poly_ord));
-        n_vec.push_back(result);
-        n_mat.conservativeResize(2, n_mat.cols() + 2);
-        n_mat.col(n_mat.cols() - 2) << result, 0;
-        n_mat.col(n_mat.cols() - 1) << 0, result;
+        std::vector<double> n_vec;
+        Eigen::MatrixXd n_mat(2, 0);
+        for (int i = 0; i <= poly_ord; i++)
+        {
+            double result =
+                lagrange_diff(eta, i, evenDistributedLagrangianPoints(poly_ord));
+            n_vec.push_back(result);
+            n_mat.conservativeResize(2, n_mat.cols() + 2);
+            n_mat.col(n_mat.cols() - 2) << result, 0;
+            n_mat.col(n_mat.cols() - 1) << 0, result;
+        }
+        return {Eigen::VectorXd::Map(n_vec.data(), n_vec.size()), n_mat};
     }
-    return {Eigen::VectorXd::Map(n_vec.data(), n_vec.size()), n_mat};
+    else if (shapeFct == ShapeFunctionType::HIERARCHICAL)
+    {
+        std::vector<double> n_vec;
+        Eigen::MatrixXd n_mat(2, 0);
+        for (int i = -1; i <= poly_ord - 1; ++i)
+        {
+            double result = legendre_poly_integrated_diff(eta,i);
+            n_vec.push_back(result);
+            n_mat.conservativeResize(2, n_mat.cols() + 2);
+            n_mat.col(n_mat.cols() - 2) << result, 0;
+            n_mat.col(n_mat.cols() - 1) << 0, result;
+        }
+        return {Eigen::VectorXd::Map(n_vec.data(), n_vec.size()), n_mat};
+    }
+    else
+    {
+        throw std::runtime_error("Invalid shape function type.");
+    }
+
 }

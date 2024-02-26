@@ -117,6 +117,6 @@ shape_N (ShapeFunctionType shapeFct, double eta, int poly_ord);
  * where each column represents the derivative values at the given eta value.
  */
 std::tuple<Eigen::VectorXd, Eigen::MatrixXd>
-shape_dN (double eta, int poly_ord);
+shape_dN (ShapeFunctionType shapeFct, double eta, int poly_ord);
 
 #endif // SBFEM_SBFEM_MATH_H

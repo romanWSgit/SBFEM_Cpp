@@ -27,11 +27,32 @@ Eigen::Vector2d r_c(double eta, int poly_ord, const Eigen::VectorXd &coord_vec,
                     const Eigen::Vector2d &centre = Eigen::Vector2d::Zero());
 
 Eigen::Vector2d r(double eta, int poly_ord, const Eigen::VectorXd &coord_vec,
-                  ShapeFunctionType shape_function_type,
-                  const Eigen::Vector2d &centre = Eigen::Vector2d::Zero());
+                  ShapeFunctionType shape_function_type);
 
-Eigen::Matrix2d j_mat(double eta, const Eigen::VectorXd &coord_vec,
-                      int poly_ord, ShapeFunctionType shape_function_type,
-                      const Eigen::Vector2d &centre = Eigen::Vector2d::Zero());
+Eigen::Matrix2d j_hat_mat_c(
+    double xi, double eta, int poly_ord, const Eigen::MatrixXd &coord_vec,
+    ShapeFunctionType shape_function_type,
+    const Eigen::VectorXd &centre = Eigen::VectorXd::Zero(2));
+
+Eigen::Matrix2d j_hat_mat(double xi, double eta, int poly_ord,
+                          const Eigen::MatrixXd &coord_vec,
+                          ShapeFunctionType shape_function_type);
+
+Eigen::Matrix2d j_mat_c(
+    double eta, int poly_ord, const Eigen::VectorXd &coord_vec,
+    ShapeFunctionType shape_function_type,
+    const Eigen::Vector2d &centre = Eigen::Vector2d::Zero());
+
+Eigen::Matrix2d j_mat(double eta, int poly_ord,
+                      const Eigen::VectorXd &coord_vec,
+                      ShapeFunctionType shape_function_type);
+
+double det_j(double eta, int poly_ord, const Eigen::VectorXd &coord_vec,
+             ShapeFunctionType shape_function_type,
+             const Eigen::Vector2d &centre = Eigen::Vector2d::Zero());
+
+double dV_divided_by_dxi_deta(double xi, double eta, int poly_ord,
+                              const Eigen::VectorXd &coord_vec,
+                              ShapeFunctionType shape_function_type);
 
 #endif // SBFEM_SBFEM_FUNCTIONS_H
