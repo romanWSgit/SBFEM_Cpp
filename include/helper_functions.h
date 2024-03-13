@@ -8,138 +8,147 @@
 #ifndef SBFEM_HELPER_FUNCTIONS_H
 #define SBFEM_HELPER_FUNCTIONS_H
 
+#include "MaterialData.h"
+#include "fast_matrix_market/app/Eigen.hpp"
+#include "fast_matrix_market/fast_matrix_market.hpp"
 #include <Eigen/Dense>
 #include <Eigen/Sparse>
-#include <nlohmann/json.hpp>
-#include <tuple>
 #include <algorithm>
-#include <optional>
-#include <vector>
 #include <fstream>
-#include "MaterialData.h"
 #include <iostream>
+#include <nlohmann/json.hpp>
+#include <optional>
+#include <tuple>
 #include <type_traits>
-#include "fast_matrix_market/fast_matrix_market.hpp"
-#include "fast_matrix_market/app/Eigen.hpp"
+#include <vector>
 
 /**
 
    * @brief Writes an Eigen matrix to a Matrix Market (.mtx) file.
 
-   * The Matrix Market format is widely used for representing matrices in numerical computations.
+   * The Matrix Market format is widely used for representing matrices in
+   numerical computations.
      !!! NOTE Template needs to be in the header
    * @param matrix The Eigen matrix to be written.
 
    * @param filename The name of the .mtx file to be generated.
 
-   * @details This function takes an Eigen matrix and writes it to a Matrix Market (.mtx) file.
+   * @details This function takes an Eigen matrix and writes it to a Matrix
+   Market (.mtx) file.
 
-   * The Matrix Market format is a widely-used file format for representing matrices in numerical computations.
+   * The Matrix Market format is a widely-used file format for representing
+   matrices in numerical computations.
 
-   * The generated file will have a header specifying the matrix details, followed by the matrix data.
+   * The generated file will have a header specifying the matrix details,
+   followed by the matrix data.
 
    * @throws std::ofstream::failure If the file cannot be opened.
 
    * @return void
 
    */
-template<class Matrix>
-void writeEigenMatrixToMtx (const Matrix &matrix, const std::string &filename)
+template <class Matrix>
+void writeEigenMatrixToMtx(const Matrix &matrix, const std::string &filename)
 {
-    std::ofstream file (filename);
-    if (file.is_open ())
+    std::ofstream file(filename);
+    if (file.is_open())
+    {
+        file << "%%MatrixMarket matrix array real general\n";
+        file << matrix.rows() << " " << matrix.cols() << "\n";
+        for (int i = 0; i < matrix.rows(); ++i)
         {
-            file << "%%MatrixMarket matrix array real general\n";
-            file << matrix.rows () << " " << matrix.cols () << "\n";
-            for (int i = 0; i < matrix.rows (); ++i)
-                {
-                    for (int j = 0; j < matrix.cols (); ++j)
-                        {
-                            file << matrix (i, j) << "\n";
-                        }
-                }
-            file.close ();
+            for (int j = 0; j < matrix.cols(); ++j)
+            {
+                file << matrix(i, j) << "\n";
+            }
         }
+        file.close();
+    }
     else
-        {
-            std::cout << "Unable to open file";
-        }
+    {
+        std::cout << "Unable to open file";
+    }
 }
 
 /**
  * @brief Reads a Matrix Market file into an Eigen Dense matrix.
  *
- * This function takes a file path as input and reads a Matrix Market file into an Eigen Dense matrix.
- * The function uses the fast_matrix_market library to handle the Matrix Market format.
+ * This function takes a file path as input and reads a Matrix Market file into
+ * an Eigen Dense matrix. The function uses the fast_matrix_market library to
+ * handle the Matrix Market format.
  *
  * @param filePath The file path of the Matrix Market file to be read.
- * @return The Eigen Dense matrix containing the data from the Matrix Market file.
+ * @return The Eigen Dense matrix containing the data from the Matrix Market
+ * file.
  * @throw invalid_mm If the Matrix Market file is invalid or cannot be read.
  */
-Eigen::MatrixXd readMatrixFromFile (const std::string &filePath);
+Eigen::MatrixXd readMatrixFromFile(const std::string &filePath);
 
 /**
  * @brief Function to convert a JSON array to an Eigen matrix.
  *
- * This function takes a JSON array as input and converts it into an Eigen matrix. The JSON array is assumed to represent a 2D matrix, where each element in the array is a row of the
-* matrix.
+ * This function takes a JSON array as input and converts it into an Eigen
+ * matrix. The JSON array is assumed to represent a 2D matrix, where each
+ * element in the array is a row of the matrix.
  *
  * @param jsonArray The JSON array to be converted.
  * @return The Eigen matrix created from the JSON array.
  *
  * @note The JSON array should be a valid 2D matrix representation.
- * @warning The function assumes that all rows in the JSON array have the same number of elements.
+ * @warning The function assumes that all rows in the JSON array have the same
+ * number of elements.
  *
  * @see fromJsonArray()
  */
-template<typename MatrixType>
-MatrixType jsonToEigenMatrix (const nlohmann::json &jsonArray)
+template <typename MatrixType>
+MatrixType jsonToEigenMatrix(const nlohmann::json &jsonArray)
 {
     // Check if the input is a non-empty array of arrays
-    if (jsonArray.empty () || !jsonArray.is_array ()
-        || !jsonArray[0].is_array ())
-        {
-            throw std::invalid_argument ("Invalid JSON input: Expected a non-empty array of arrays.");
-        }
+    if (jsonArray.empty() || !jsonArray.is_array() || !jsonArray[0].is_array())
+    {
+        throw std::invalid_argument(
+            "Invalid JSON input: Expected a non-empty array of arrays.");
+    }
 
-    size_t rows = jsonArray.size ();
-    size_t cols = jsonArray[0].size ();
+    size_t rows = jsonArray.size();
+    size_t cols = jsonArray[0].size();
 
     // Check for consistency in each row
-    for (const auto &row: jsonArray)
+    for (const auto &row : jsonArray)
+    {
+        if (!row.is_array() || row.size() != cols)
         {
-            if (!row.is_array () || row.size () != cols)
-                {
-                    throw std::invalid_argument ("Invalid JSON input: Inconsistent array sizes in matrix.");
-                }
+            throw std::invalid_argument(
+                "Invalid JSON input: Inconsistent array sizes in matrix.");
         }
+    }
 
     // Instantiate an Eigen matrix of the appropriate type
-    MatrixType mat (rows, cols);
+    MatrixType mat(rows, cols);
     for (size_t i = 0; i < rows; ++i)
+    {
+        for (size_t j = 0; j < cols; ++j)
         {
-            for (size_t j = 0; j < cols; ++j)
-                {
-                    // Use std::is_same to check the matrix type and cast accordingly
-                    if constexpr (std::is_same<MatrixType, Eigen::MatrixXd>::value)
-                        {
-                            mat (i, j) = jsonArray[i][j].get<double> ();
-                        }
-                    else if constexpr (std::is_same<MatrixType, Eigen::MatrixXi>::value)
-                        {
-                            mat (i, j) = jsonArray[i][j].get<int> ();
-                        }
-                }
+            // Use std::is_same to check the matrix type and cast accordingly
+            if constexpr (std::is_same<MatrixType, Eigen::MatrixXd>::value)
+            {
+                mat(i, j) = jsonArray[i][j].get<double>();
+            }
+            else if constexpr (std::is_same<MatrixType, Eigen::MatrixXi>::value)
+            {
+                mat(i, j) = jsonArray[i][j].get<int>();
+            }
         }
+    }
     return mat;
 }
-
 
 /**
  * @brief Convert an Eigen vector to a std::vector
  *
- * This function takes an Eigen vector object and converts it to a std::vector<double>.
- * The resulting std::vector will have the same size as the input Eigen vector.
+ * This function takes an Eigen vector object and converts it to a
+ * std::vector<double>. The resulting std::vector will have the same size as the
+ * input Eigen vector.
  *
  * @tparam Derived The derived Eigen vector type
  * @param vector The input Eigen vector to be converted
@@ -147,54 +156,113 @@ MatrixType jsonToEigenMatrix (const nlohmann::json &jsonArray)
  *
  * @note The input Eigen vector type must be an Eigen::MatrixBase derived class.
  */
-template<typename Derived>
-std::vector<double> eigenToStdVector (const Eigen::MatrixBase<Derived> &vector)
+template <typename Derived>
+std::vector<double> eigenToStdVector(const Eigen::MatrixBase<Derived> &vector)
 {
-    std::vector<double> vec (vector.size ());
-    for (int i = 0; i < vector.size (); ++i)
-        {
-            vec[i] = static_cast<double>(vector (i));
-        }
+    std::vector<double> vec(vector.size());
+    for (int i = 0; i < vector.size(); ++i)
+    {
+        vec[i] = static_cast<double>(vector(i));
+    }
     return vec;
 }
 
+/**
+ * \brief Convert an Eigen matrix to a 2D std::vector
+ *
+ * This function converts an Eigen matrix to a 2D std::vector with double
+ * precision. The resulting 2D std::vector has the same dimensions as the input
+ * matrix.
+ *
+ * \tparam Derived The template parameter type for the Eigen matrix.
+ * \param matrix The Eigen matrix to be converted.
+ * \return A 2D std::vector with the same dimensions as the input matrix.
+ */
+template <typename Derived>
+std::vector<std::vector<double>> eigenToStdVector2D(
+    const Eigen::MatrixBase<Derived> &matrix)
+{
+    std::vector<std::vector<double>> vec(matrix.rows(),
+                                         std::vector<double>(matrix.cols()));
+    for (int i = 0; i < matrix.rows(); ++i)
+    {
+        for (int j = 0; j < matrix.cols(); ++j)
+        {
+            vec[i][j] = static_cast<double>(matrix(i, j));
+        }
+    }
+    return vec;
+}
 
 /**
-* \brief Convert an Eigen matrix to a 2D std::vector
-*
-* This function converts an Eigen matrix to a 2D std::vector with double precision.
-* The resulting 2D std::vector has the same dimensions as the input matrix.
-*
-* \tparam Derived The template parameter type for the Eigen matrix.
-* \param matrix The Eigen matrix to be converted.
-* \return A 2D std::vector with the same dimensions as the input matrix.
-*/
-template<typename Derived>
-std::vector<std::vector<double>>
-eigenToStdVector2D (const Eigen::MatrixBase<Derived> &matrix)
+ * @brief Converts a std::vector of doubles to an Eigen::MatrixBase object.
+ *
+ * This function takes a std::vector of doubles and converts it into an
+ * Eigen::MatrixBase object. The size of the resulting matrix is based on
+ * the size of the input vector and is a column vector by default. The data
+ * in the std::vector is copied into the Eigen::MatrixBase object.
+ *
+ * @tparam Derived The derived type of the Eigen::MatrixBase object.
+ * @param vec The std::vector of doubles to be converted.
+ * @return Eigen::MatrixBase<Derived> The converted Eigen::MatrixBase object.
+ */
+template <typename Derived>
+Eigen::Matrix<Derived, Eigen::Dynamic, 1> stdVectorToEigen(const std::vector<Derived> &vec)
 {
-    std::vector<std::vector<double>> vec (matrix.rows (), std::vector<double> (matrix.cols ()));
-    for (int i = 0; i < matrix.rows (); ++i)
+    Eigen::Matrix<Derived, Eigen::Dynamic, 1> eigenVec(vec.size(), 1);
+
+    // Copy data from std::vector
+    for (int i = 0; i < vec.size(); ++i)
+    {
+        eigenVec(i, 0) = vec[i];
+    }
+
+    return eigenVec;
+}
+
+/**
+ * @brief Converts a 2D std::vector to an Eigen matrix.
+ *
+ * This function takes a 2D std::vector of doubles and converts it to an Eigen
+ * matrix. The size of the Eigen matrix is determined by the size of the input
+ * 2D std::vector. The data from the 2D std::vector is copied to the Eigen
+ * matrix.
+ *
+ * @tparam Derived The type of the derived Eigen matrix.
+ * @param vec2D The input 2D std::vector of doubles to be converted.
+ * @return The converted Eigen matrix.
+ */
+template <typename Derived>
+Eigen::Matrix<Derived, Eigen::Dynamic, Eigen::Dynamic> stdVector2DToEigen(const std::vector<std::vector<Derived>>& vec2D)
+{
+    int rows = vec2D.size();
+    int cols = vec2D[0].size();
+    Eigen::Matrix<Derived, Eigen::Dynamic, Eigen::Dynamic> eigenMat(rows, cols);
+
+    // Copy data from the 2D std::vector
+    for (int i = 0; i < rows; ++i)
+    {
+        for (int j = 0; j < cols; ++j)
         {
-            for (int j = 0; j < matrix.cols (); ++j)
-                {
-                    vec[i][j] = static_cast<double>(matrix (i, j));
-                }
+            eigenMat(i, j) = vec2D[i][j];
         }
-    return vec;
+    }
+    return eigenMat;
 }
 
 /**
  * \fn     StructData get_material_data_for_type(std::string& material_name, \
-                                      std::vector<StructData>& material_data_list);
+                                      std::vector<StructData>&
+ material_data_list);
  * \brief  Short description of the function
  * \param  nlohmann::json& j Description of the first parameter
  * \param  std::string field Description of the second parameter
- * \return returns an Eigen::MatrixXd matrix iff the field name is found in the json handle
+ * \return returns an Eigen::MatrixXd matrix iff the field name is found in the
+ json handle
  *
  * More detailed description of the function
 */
-StructData getMaterialDataForType (std::string &material_name, \
-                                      std::vector<StructData> &material_data_list);
+StructData getMaterialDataForType(std::string &material_name,
+                                  std::vector<StructData> &material_data_list);
 
-#endif //SBFEM_HELPER_FUNCTIONS_H
+#endif // SBFEM_HELPER_FUNCTIONS_H

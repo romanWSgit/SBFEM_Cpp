@@ -27,6 +27,45 @@ double integrateComponent(double a, double b, int componentIndex)
     return result;
 }
 
+std::tuple<Eigen::MatrixXd, Eigen::MatrixXd, double, double> matrix_integrator2(
+    double a, double b,
+    const std::function<Eigen::MatrixXd(double, int)> &matFunc, int rows,
+    int cols, int i)
+{
+    Eigen::MatrixXd integralResults(rows, cols);
+    Eigen::MatrixXd errorEstimates(rows, cols);
+
+    double maxError = 0;
+    double minError = std::numeric_limits<double>::infinity();
+
+#pragma omp parallel for collapse(2) reduction(max : maxError)                 \
+    reduction(min : minError)
+    for (int i = 0; i < rows; ++i)
+    {
+        for (int j = 0; j < cols; ++j)
+        {
+            auto elementFunc = [&](double x) {
+                return matFunc(x, i + 1)(i, j);
+            };
+
+            double error_estimate;
+            double result =
+                boost::math::quadrature::gauss_kronrod<double, 15>::integrate(
+                    elementFunc, a, b, 5, 1e-10, &error_estimate);
+
+            integralResults(i, j) = result;
+            errorEstimates(i, j) = error_estimate;
+
+            if (error_estimate > maxError)
+                maxError = error_estimate;
+            if (error_estimate < minError)
+                minError = error_estimate;
+        }
+    }
+
+    return {integralResults, errorEstimates, maxError, minError};
+}
+
 std::tuple<Eigen::MatrixXd, Eigen::MatrixXd, double, double> matrix_integrator(
     double a, double b, const std::function<Eigen::MatrixXd(double)> &matFunc,
     int rows, int cols)
@@ -82,21 +121,98 @@ double integrateComponentKronrod(double a, double b, int componentIndex)
     return result;
 }
 
-[[maybe_unused]] const int superElements = 1;
+// just a test function
+Eigen::MatrixXd myMatrixFunction(double x, int i)
+{
+    Eigen::MatrixXd result(2, 2); // Example: Create a 2x2 matrix
+    result(0, 0) = cos(x);
+    result(0, 1) = x * x * i;
+    result(1, 0) = pow(x, i);
+    result(1, 1) = sin(x * i);
+    return result;
+}
 
-//void main_loop(const SuperElementJson &sE)
+void main_loop(const SuperElementJson &sE)
+{
+    const int superElements = 1; // set here manually
+    const int numberOfDegreesPerNode =
+        2; // Note that this is limited to 2 at the moment
+    const int nodesPerElement =
+        sE.getMSEPolyOrd() + 1; // number of nodes per element ??? hierarchical
+    // TODO: Thats a really good question! How does this work with
+    // hierarchical???
+    const int eDim = nodesPerElement * numberOfDegreesPerNode;
+    const int rows = 3;
+    const int cols = 4;
+
+    for (int se = 1; se <= superElements; ++se)
+    {
+        const int elements = sE.getMSEIelem();
+        for (int el = 1; el <= 1; ++el)
+        {
+            Eigen::MatrixXd e0 = Eigen::MatrixXd::Zero(rows, cols);
+            Eigen::MatrixXd e1 = Eigen::MatrixXd::Zero(rows, cols);
+            Eigen::MatrixXd e2 = Eigen::MatrixXd::Zero(rows, cols);
+            Eigen::MatrixXd m0 = Eigen::MatrixXd::Zero(rows, cols);
+
+            omp_set_num_threads(4);
+            for (int i = 1; i <= 10; ++i)
+            {
+                auto [integralResults, errorEstimates, maxError, minError] =
+                    matrix_integrator2(-1.0, 1.0, myMatrixFunction, rows, cols,
+                                       i);
+
+                // Process or display the results for this iteration as needed
+                std::cout << "Iteration " << i << ":\n";
+                std::cout << "Integral Results:\n" << integralResults << "\n";
+                std::cout << "Error Estimates:\n" << errorEstimates << "\n";
+                std::cout << "Max Error: " << maxError << "\n";
+                std::cout << "Min Error: " << minError << "\n\n";
+            }
+            //                double
+            //                dV_divided_by_dxi_deta(double xi, double eta, int
+            //                poly_ord,
+            //                                       const Eigen::VectorXd
+            //                                       &coord_vec,
+            //                                       ShapeFunctionType
+            //                                       shape_function_type)
+            //
+            //                    auto f_bind =
+            //                        std::bind(dV_divided_by_dxi_deta,
+            //                        std::placeholders::_1,
+            //                                  std::placeholders::_2, 1, elem,
+            //                                  ShapeFunctionType::STANDARD);
+            //
+            //            area += integrateScalarKronrod2D(f_bind, 0.0, 1.0,
+            //            -1.0, 1.0);
+        }
+    }
+
+    //    // Make sure they have the same dimensions
+    //    if (matrix1.rows() != matrix2.rows() || matrix1.cols() !=
+    //    matrix2.cols())
+    //    {
+    //        std::cerr << "Error: Matrices have different dimensions!" <<
+    //        std::endl;
+    //    }
+    //
+    //    // Direct addition
+    //    Eigen::MatrixXd result_matrix = matrix1 + matrix2;
+}
+
+// void main_loop(const SuperElementJson &sE)
 //{
-//    for (int se = 1; se <= superElements; ++se)
-//    {
-//        int nodesPerElement = sE.getMSENodedim() eDim = nodesPerElement * ndn;
-//        int nElements = sE.getMSEIelem();
-//        for (int el = 1; el <= nElements; ++el)
-//        {
-//            Eigen::MatrixXd matrix(rows, cols); // MatrixXd for double precision
-//            matrix.setZero();
-//        }
-//    }
-//}
+//     for (int se = 1; se <= superElements; ++se)
+//     {
+//         int nodesPerElement = sE.getMSENodedim() eDim = nodesPerElement *
+//         ndn; int nElements = sE.getMSEIelem(); for (int el = 1; el <=
+//         nElements; ++el)
+//         {
+//             Eigen::MatrixXd matrix(rows, cols); // MatrixXd for double
+//             precision matrix.setZero();
+//         }
+//     }
+// }
 
 // For[i = 1, i <= superElements, i++,
 // for (int se = 0; se <= superElements; ++se)

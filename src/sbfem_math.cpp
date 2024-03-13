@@ -297,8 +297,8 @@ double legendre_poly_integrated_diff(double x, int p)
     }
 }
 
-std::tuple<Eigen::VectorXd, Eigen::MatrixXd> shape_N(ShapeFunctionType shapeFct,
-                                                     double eta, int poly_ord)
+std::tuple<Eigen::VectorXd, Eigen::MatrixXd> shape_N(double eta, int poly_ord,
+                                                     ShapeFunctionType shapeFct)
 {
     if (shapeFct == ShapeFunctionType::STANDARD)
     {
@@ -321,7 +321,7 @@ std::tuple<Eigen::VectorXd, Eigen::MatrixXd> shape_N(ShapeFunctionType shapeFct,
         Eigen::MatrixXd n_mat(2, 0);
         for (int i = -1; i <= poly_ord - 1; ++i)
         {
-            double result = legendre_poly_integrated(eta,i);
+            double result = legendre_poly_integrated(eta, i);
             n_vec.push_back(result);
             n_mat.conservativeResize(2, n_mat.cols() + 2);
             n_mat.col(n_mat.cols() - 2) << result, 0;
@@ -335,7 +335,8 @@ std::tuple<Eigen::VectorXd, Eigen::MatrixXd> shape_N(ShapeFunctionType shapeFct,
     }
 }
 
-std::tuple<Eigen::VectorXd, Eigen::MatrixXd> shape_dN(ShapeFunctionType shapeFct,double eta, int poly_ord)
+std::tuple<Eigen::VectorXd, Eigen::MatrixXd> shape_dN(
+    double eta, int poly_ord, ShapeFunctionType shapeFct)
 {
     if (shapeFct == ShapeFunctionType::STANDARD)
     {
@@ -343,8 +344,8 @@ std::tuple<Eigen::VectorXd, Eigen::MatrixXd> shape_dN(ShapeFunctionType shapeFct
         Eigen::MatrixXd n_mat(2, 0);
         for (int i = 0; i <= poly_ord; i++)
         {
-            double result =
-                lagrange_diff(eta, i, evenDistributedLagrangianPoints(poly_ord));
+            double result = lagrange_diff(
+                eta, i, evenDistributedLagrangianPoints(poly_ord));
             n_vec.push_back(result);
             n_mat.conservativeResize(2, n_mat.cols() + 2);
             n_mat.col(n_mat.cols() - 2) << result, 0;
@@ -358,7 +359,7 @@ std::tuple<Eigen::VectorXd, Eigen::MatrixXd> shape_dN(ShapeFunctionType shapeFct
         Eigen::MatrixXd n_mat(2, 0);
         for (int i = -1; i <= poly_ord - 1; ++i)
         {
-            double result = legendre_poly_integrated_diff(eta,i);
+            double result = legendre_poly_integrated_diff(eta, i);
             n_vec.push_back(result);
             n_mat.conservativeResize(2, n_mat.cols() + 2);
             n_mat.col(n_mat.cols() - 2) << result, 0;
@@ -370,5 +371,4 @@ std::tuple<Eigen::VectorXd, Eigen::MatrixXd> shape_dN(ShapeFunctionType shapeFct
     {
         throw std::runtime_error("Invalid shape function type.");
     }
-
 }

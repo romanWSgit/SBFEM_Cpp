@@ -97,8 +97,8 @@ legendre_poly_integrated_diff (double x, int p);
  * @return          A tuple containing the shape function vector and the
  * gradient matrix
  */
-std::tuple<Eigen::VectorXd, Eigen::MatrixXd>
-shape_N (ShapeFunctionType shapeFct, double eta, int poly_ord);
+std::tuple<Eigen::VectorXd, Eigen::MatrixXd> shape_N(
+    double eta, int poly_ord, ShapeFunctionType shapeFct);
 
 /**
  * @brief Calculates the shape function and its derivative matrix for a given
@@ -116,7 +116,7 @@ shape_N (ShapeFunctionType shapeFct, double eta, int poly_ord);
  *         - The derivative matrix is a 2xN matrix (N is the polynomial order)
  * where each column represents the derivative values at the given eta value.
  */
-std::tuple<Eigen::VectorXd, Eigen::MatrixXd>
-shape_dN (ShapeFunctionType shapeFct, double eta, int poly_ord);
+std::tuple<Eigen::VectorXd, Eigen::MatrixXd> shape_dN(
+    double eta, int poly_ord, ShapeFunctionType shapeFct);
 
 #endif // SBFEM_SBFEM_MATH_H

@@ -1,21 +1,24 @@
 cmake_minimum_required(VERSION 3.6)
-project(SBFEM)
+project(SBFEM CXX C Fortran)
 
 #set(Boost_USE_STATIC_LIBS OFF)
 #set(Boost_USE_MULTITHREADED ON)
 #set(Boost_USE_STATIC_RUNTIME OFF)
 
+# Enable languages used in the project
+
+set(CMAKE_INSTALL_RPATH "/opt/local/lib/gcc13")
+
 set(CMAKE_CXX_STANDARD 20)
 
 set(CMAKE_CXX_COMPILER /opt/homebrew/opt/llvm/bin/clang++)
 set(CMAKE_C_COMPILER /opt/homebrew/opt/llvm/bin/clang)
-
+set(CMAKE_INSTALL_NAME_TOOL "install_name_tool")
 ### set python Version:
 #set(Python_INCLUDE_DIRS "/Users/roman_w_s/mambaforge/include")
 #set(Python_LIBRARIES "/Users/roman_w_s/mambaforge/lib")
 #set(Python_EXECUTABLE "/Users/roman_w_s/mambaforge/bin/python3")
 #find_package(Python COMPONENTS Interpreter Development)
-
 
 
 # Now simply link against gtest or gtest_main as needed. Eg
@@ -32,11 +35,10 @@ set(CMAKE_C_COMPILER /opt/homebrew/opt/llvm/bin/clang)
 #)
 
 
-
 find_package(Eigen3 REQUIRED)
-if(NOT EXISTS ${EIGEN3_INCLUDE_DIR})
+if (NOT EXISTS ${EIGEN3_INCLUDE_DIR})
     message(FATAL_ERROR "Please check that the set Eigen directory is valid!")
-endif()
+endif ()
 include_directories(${EIGEN3_INCLUDE_DIR})
 message("Eigen include dir: " ${EIGEN3_INCLUDE_DIR})
 
@@ -45,26 +47,30 @@ find_program(GNUPLOT_EXECUTABLE NAMES gnuplot)
 message(STATUS "Gnuplot executable: ${GNUPLOT_EXECUTABLE}")
 
 
-
-
 find_package(nlohmann_json REQUIRED)
 
 find_package(Matplot++ REQUIRED)
 
 find_package(glm CONFIG REQUIRED)
 
-
-
+include(FetchContent)
+FetchContent_Declare(exprtk URL
+        https://raw.githubusercontent.com/ArashPartow/exprtk/master/exprtk.hpp
+        DOWNLOAD_NO_EXTRACT TRUE)
+FetchContent_GetProperties(exprtk)
+if(NOT exprtk_POPULATED)
+    FetchContent_Populate(exprtk)
+endif()
+include_directories(${exprtk_SOURCE_DIR})
 # Find the Boost library
 find_package(Boost REQUIRED COMPONENTS
         unit_test_framework
         filesystem
         system
-        iostreams )
+        iostreams)
 
 
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/external/gnuplot-iostream")
-
 
 
 # Include Boost in the project
@@ -78,7 +84,7 @@ include_directories(${Boost_INCLUDE_DIRS})
 #include_directories(${PLPLOT_INCLUDE_DIRS})
 
 
-include(FetchContent)
+
 FetchContent_Declare(
         fast_matrix_market
         GIT_REPOSITORY https://github.com/alugowski/fast_matrix_market
@@ -88,19 +94,19 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(fast_matrix_market)
 
 find_package(LAPACK REQUIRED)
-if(LAPACK_FOUND)
+if (LAPACK_FOUND)
     message("-- Found LAPACK library")
-endif()
+endif ()
 
 find_package(raylib REQUIRED) # Find the raylib package
-if(raylib_FOUND)
+if (raylib_FOUND)
     message("-- Found raylib library")
-endif()
+endif ()
 
 find_package(BLAS)
-if(LAPACK_FOUND)
+if (LAPACK_FOUND)
     message("-- Found BLAS library")
-endif()
+endif ()
 
 set(SLICOT_LIBRARY "/usr/local/lib/libslicot.a")
 
@@ -120,13 +126,15 @@ add_subdirectory(gtests)
 
 # Include the header files
 
+
+
 target_include_directories(SBFEM PRIVATE ${PROJECT_SOURCE_DIR}/external/tinynurbs/include)
 
 target_link_libraries(SBFEM
         PRIVATE
-#        ${VTK_LIBRARIES}
-#        ${PLPLOT_LIBRARIES}
-#        ${PLPLOT_LIBRARIES}
+        #        ${VTK_LIBRARIES}
+        #        ${PLPLOT_LIBRARIES}
+        #        ${PLPLOT_LIBRARIES}
         fast_matrix_market::fast_matrix_market
         nlohmann_json::nlohmann_json
         ${Boost_LIBRARIES}
@@ -136,7 +144,7 @@ target_link_libraries(SBFEM
         ${SLICOT_LIBRARY}
         Matplot++::matplot
         raylib
-        )
+)
 
 
 # OPENMP
@@ -144,18 +152,24 @@ find_package(OpenMP)
 if (OpenMP_CXX_FOUND)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
     target_link_libraries(SBFEM PUBLIC OpenMP::OpenMP_CXX)
-endif()
+endif ()
 
 # Assuming your target is an executable or library named 'my_target'
-if(TARGET glm::glm)
+if (TARGET glm::glm)
     message(STATUS "GLM found.")
     target_link_libraries(SBFEM PRIVATE glm::glm)
-else()
+else ()
     message(FATAL_ERROR "GLM not found. Please install GLM or make sure CMake can find it.")
-endif()
+endif ()
 
 
-
+add_custom_command(TARGET SBFEM
+        POST_BUILD
+        COMMAND
+        ${CMAKE_INSTALL_NAME_TOOL}
+        -add_rpath "/opt/local/lib/gcc13"
+        $<TARGET_FILE:SBFEM>
+)
 
 # Define BOOST_TEST_DYN_LINK to enable dynamic linking
 #target_compile_definitions(SBFEM PRIVATE "BOOST_TEST_DYN_LINK")
@@ -176,11 +190,11 @@ if (DOXYGEN_FOUND)
     message("Doxygen build started")
     message("Doxygen executable = ${DOXYGEN_EXECUTABLE}")
     # note the option ALL which allows to build the docs together with the application
-    add_custom_target( doc_doxygen ALL
+    add_custom_target(doc_doxygen ALL
             COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_OUT}
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
             COMMENT "Generating API documentation with Doxygen"
-            VERBATIM )
+            VERBATIM)
 else (DOXYGEN_FOUND)
     message("Doxygen need to be installed to generate the doxygen documentation")
 endif (DOXYGEN_FOUND)

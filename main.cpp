@@ -9,22 +9,20 @@
  */
 
 #include <algorithm>
+#include <boost/version.hpp>
 #include <chrono>
 #include <cmath>
 #include <complex>
 #include <fstream>
 #include <iostream>
 #include <limits>
-#include <omp.h> // opem mp
+#include <matplot/matplot.h> // For Matplot++
+#include <omp.h>             // opem mp
 #include <optional>
 #include <string>
 #include <tuple>
 #include <utility>
 #include <vector>
-#include <boost/version.hpp>
-#include <matplot/matplot.h> // For Matplot++
-
-
 
 // Eigen
 #include <Eigen/Core>
@@ -45,21 +43,24 @@
 #include "fast_matrix_market/app/Eigen.hpp"
 #include "fast_matrix_market/fast_matrix_market.hpp"
 
+#include "exprtk.hpp"
+
 // Tinynurbs
 #include <glm/vec3.hpp>
 #include <tinynurbs/tinynurbs.h>
 
 // Own
+#include "FortranInteroperability.h"
 #include "GraphicsController.h"
-#include "reorder_schur.h"
-#include "sbfem_driver.h"
-#include "z_mat.h"
 #include "MaterialData.h"
 #include "SuperElementJson.h"
-#include "sbfem_math.h"
 #include "helper_functions.h"
 #include "plot.h"
+#include "reorder_schur.h"
+#include "sbfem_driver.h"
 #include "sbfem_functions.h"
+#include "sbfem_math.h"
+#include "z_mat.h"
 
 // extern "C"
 //{
@@ -210,19 +211,23 @@ int main(int argc, char **argv)
                        ShapeFunctionType::HIERARCHICAL);
     std::cout << "Determinant of J:" << det << std::endl;
 
-
-
     // Print Eigen array
     std::cout << sE.getMSEElementsM() << std::endl;
     std::cout << sE.getMSEElementsM().row(0) << std::endl;
     std::cout << shapeFunctionTypeToString(sE.getMSEShapeFct()) << std::endl;
+
+    // auto nvecFortran = callNVecF(0.1, 1, false);
+    // auto nvecFortranEigen = stdVectorToEigen(nvecFortran);
+    // std::cout << "nvecFortran " << nvecFortranEigen << std::endl;
+    // auto nvecCPP = shape_N(0.1, 1, ShapeFunctionType::STANDARD);
+    // std::cout << "nvecCpp " << nvecFortranEigen << std::endl;
 
     // todo: write global try catch block
     try
 
     {
         auto [shapeVec, shapeMat] =
-            shape_N(sE.getMSEShapeFct(), 0.1, sE.getMSEPolyOrd());
+            shape_N(0.1, sE.getMSEPolyOrd(), sE.getMSEShapeFct());
         std::cout << shapeVec << '\n';
         std::cout << shapeMat << '\n';
     }
@@ -245,9 +250,15 @@ int main(int argc, char **argv)
         getMaterialDataForType(search_materialType, material_data_list);
 
     auto material_data =
-        findStructDataAndMaterial(material_data_list, "Flat Disc", "steel");
+        findStructDataAndMaterial(material_data_list, "Flat Disc", "fictional");
 
     std::cout << material_data->params.Em << std::endl;
+    std::cout << material_data->params.nu << std::endl;
+    std::cout << material_data->D << std::endl;
+    Eigen::MatrixXd Dmat = material_data->getDMatrix();
+    std::cout << "Dmat: "
+              << "\n"
+              << Dmat << std::endl;
 
     std::cout << "ltg: \n" << sE.getMSELtg() << std::endl;
 
@@ -280,6 +291,8 @@ int main(int argc, char **argv)
               << std::endl;
     std::cout << "Integral of the second component: " << integralComponent2p
               << std::endl;
+
+    main_loop(sE);
 
     return 0;
 }

@@ -11,6 +11,7 @@
 #include <boost/math/quadrature/gauss_kronrod.hpp>
 #include <functional>
 #include <iostream>
+#include <omp.h>
 
 Eigen::VectorXd exampleFunction(double x);
 
@@ -41,10 +42,16 @@ double integrateScalarKronrod2D(Func2 f, double ax, double bx, double ay, double
 
 double integrateComponent(double a, double b, int componentIndex);
 double integrateComponentKronrod(double a, double b, int componentIndex);
-#endif // SBFEM_DRIVER_H_
+
+
+std::tuple<Eigen::MatrixXd, Eigen::MatrixXd, double, double> matrix_integrator2(
+    double a, double b, const std::function<Eigen::MatrixXd(double, int)> &matFunc,
+    int rows, int cols, int i);
 
 std::tuple<Eigen::MatrixXd, Eigen::MatrixXd, double, double> matrix_integrator(
     double a, double b, const std::function<Eigen::MatrixXd(double)> &matFunc,
     int rows, int cols);
 
 void main_loop(const SuperElementJson &sE);
+
+#endif // SBFEM_DRIVER_H_

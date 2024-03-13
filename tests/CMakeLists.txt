@@ -1,8 +1,5 @@
 # Add test executable
 
-set(CMAKE_CXX_COMPILER /opt/homebrew/opt/llvm/bin/clang++)
-set(CMAKE_C_COMPILER /opt/homebrew/opt/llvm/bin/clang)
-
 
 add_executable(SBFEM_Tests
         test_main.cpp
