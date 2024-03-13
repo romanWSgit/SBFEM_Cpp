@@ -76,39 +76,7 @@ constexpr bool IMPORT_SCHUR_FLAG = true;
 int main(int argc, char **argv)
 {
 
-    tinynurbs::Curve<float> crv;               // Planar curve using float32
-    crv.control_points = {glm::vec3(-1, 0, 0), // std::vector of 3D points
-                          glm::vec3(0, 1, 0), glm::vec3(1, 0, 0)};
-    crv.knots = {0, 0, 0, 1, 1, 1}; // std::vector of floatsph
-
-    crv.degree = 2;
-    std::vector<float> res = tinynurbs::bsplineBasis(2, 2, crv.knots, 0.1f);
-
-    if (!tinynurbs::curveIsValid(crv))
-    {
-        // check if degree, knots and control points are configured as per
-        // #knots == #control points + degree + 1
-    }
-    glm::vec3 pt = tinynurbs::curvePoint(crv, 0.f);
-    // Outputs a point [-1, 0]
-    glm::vec3 tgt = tinynurbs::curveTangent(crv, 0.5f);
-    // Outputs a vector [1, 0]
-
-    crv = tinynurbs::curveKnotInsert(crv, 0.25f);
-    crv = tinynurbs::curveKnotInsert(crv, 0.75f, 2);
-
-    std::cout << "Knot Vector elements: ";
-    for (int element : crv.knots)
-    {
-        std::cout << element << " ";
-    }
-    std::cout << std::endl;
-
-    tinynurbs::curveSaveOBJ("output_curve.obj", crv);
-
-    GraphicsController::InitializeWindow(800, 450, "NURBS Curve Visualization");
-    GraphicsController::RenderLoop(crv); // Pass the curve to be rendered
-    GraphicsController::Terminate();
+    // removed nurbs test code... this code is in branch NURBS
 
     Eigen::MatrixXd matrixZ;
     Eigen::MatrixXd matrixQPython;
