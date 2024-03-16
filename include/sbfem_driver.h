@@ -2,10 +2,13 @@
 // Created by Roman Wallner- Silberhuber on 20.02.24.
 //
 
-#ifndef SBFEM_DRIVER_H_
-#define SBFEM_DRIVER_H_
+#ifndef SBFEM_DRIVER_H
+#define SBFEM_DRIVER_H
 
+#include "MaterialData.h"
 #include "SuperElementJson.h"
+#include "helper_functions.h"
+#include "sbfem_functions.h"
 #include <Eigen/Dense>
 #include <boost/math/quadrature/gauss.hpp>
 #include <boost/math/quadrature/gauss_kronrod.hpp>
@@ -17,7 +20,6 @@ Eigen::VectorXd exampleFunction(double x);
 
 double f_new(double t);
 
-
 template <typename Func>
 double integrateScalarKronrod(Func f, double a, double b)
 {
@@ -28,10 +30,10 @@ double integrateScalarKronrod(Func f, double a, double b)
     return result;
 }
 template <typename Func2>
-double integrateScalarKronrod2D(Func2 f, double ax, double bx, double ay, double by)
+double integrateScalarKronrod2D(Func2 f, double ax, double bx, double ay,
+                                double by)
 {
-    auto fx = [&](double x)
-    {
+    auto fx = [&](double x) {
         // Integrate over y for a given x
         auto fy = [&](double y) { return f(x, y); };
         return integrateScalarKronrod(fy, ay, by);
@@ -43,15 +45,18 @@ double integrateScalarKronrod2D(Func2 f, double ax, double bx, double ay, double
 double integrateComponent(double a, double b, int componentIndex);
 double integrateComponentKronrod(double a, double b, int componentIndex);
 
-
-std::tuple<Eigen::MatrixXd, Eigen::MatrixXd, double, double> matrix_integrator2(
-    double a, double b, const std::function<Eigen::MatrixXd(double, int)> &matFunc,
-    int rows, int cols, int i);
-
 std::tuple<Eigen::MatrixXd, Eigen::MatrixXd, double, double> matrix_integrator(
     double a, double b, const std::function<Eigen::MatrixXd(double)> &matFunc,
     int rows, int cols);
 
-void main_loop(const SuperElementJson &sE);
+/**
+ * @brief Main loop function that performs calculations for each super element.
+ *
+ * @param sE The SuperElementJson object containing the super element data.
+ * @param material_data_list The list of material data to be used for
+ * calculations.
+ */
+void main_loop(const SuperElementJson &sE,
+               std::vector<StructData> &material_data_list);
 
-#endif // SBFEM_DRIVER_H_
+#endif // SBFEM_DRIVER_H

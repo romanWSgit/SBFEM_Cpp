@@ -246,7 +246,6 @@ double dV_divided_by_dxi_deta(double xi, double eta, int poly_ord,
                               const Eigen::VectorXd &coord_vec,
                               ShapeFunctionType shape_function_type);
 
-
 /**
  * @brief Calculates the transformed coordinates in xi space for a given eta
  * value.
@@ -280,7 +279,6 @@ Eigen::Vector2d g_xi(double eta, int poly_ord, const Eigen::VectorXd &coord_vec,
 Eigen::Vector2d n_xi(double eta, int poly_ord, const Eigen::VectorXd &coord_vec,
                      ShapeFunctionType shape_function_type);
 
-
 /**
  * @brief Calculate the g_eta function.
  *
@@ -302,7 +300,6 @@ Eigen::Vector2d n_xi(double eta, int poly_ord, const Eigen::VectorXd &coord_vec,
 Eigen::Vector2d g_eta(double eta, int poly_ord,
                       const Eigen::VectorXd &coord_vec,
                       ShapeFunctionType shape_function_type);
-
 
 /**
  * @brief Calculate the n_eta function.
@@ -327,19 +324,125 @@ Eigen::Vector2d n_eta(double eta, int poly_ord,
                       const Eigen::VectorXd &coord_vec,
                       ShapeFunctionType shape_function_type);
 
-
-
+/**
+ * @brief Calculates the b1 matrix for a given eta value, polynomial order,
+ * coordinate vector, shape function type, and centre coordinates.
+ *
+ * This function calculates the b1 matrix for a specific eta value, polynomial
+ * order, coordinate vector, shape function type, and centre coordinates. The b1
+ * matrix is a 3x2 matrix where each element is calculated by dividing certain
+ * intermediate results by the determinant.
+ *
+ * @param eta The input eta value.
+ * @param poly_ord The polynomial order.
+ * @param coord_vec The coordinate vector.
+ * @param shape_function_type The type of shape function.
+ * @param centre The centre coordinates.
+ * @return Eigen::MatrixXd The b1 matrix.
+ */
 Eigen::MatrixXd b1(double eta, int poly_ord, const Eigen::VectorXd &coord_vec,
                    ShapeFunctionType shape_function_type,
                    const Eigen::Vector2d &centre);
 
-
+/**
+ * @brief Calculates the b2 matrix using the given parameters.
+ *
+ * This function calculates the b2 matrix, which is a 3x2 matrix, used in
+ * certain mathematical calculations. The function takes parameters such as eta,
+ * poly_ord, coord_vec, shape_function_type, and centre to perform the
+ * calculations.
+ *
+ * @param eta The eta value used in the calculations.
+ * @param poly_ord The polynomial order used in the calculations.
+ * @param coord_vec The coordinate vector used in the calculations.
+ * @param shape_function_type The shape function type used in the calculations.
+ * @param centre The centre vector used in the calculations.
+ * @return The calculated b2 matrix as a 3x2 Eigen::MatrixXd.
+ */
 Eigen::MatrixXd b2(double eta, int poly_ord, const Eigen::VectorXd &coord_vec,
                    ShapeFunctionType shape_function_type,
                    const Eigen::Vector2d &centre);
 
+/**
+ * @brief Calculates the B1 matrix for a given evaluation point on an element.
+ *
+ * This function calculates the B1 matrix, which is used in the computation of
+ * the element stiffness matrix, for a given evaluation point on an element.
+ * The B1 matrix is calculated as the product of the b1 matrix and the shape
+ * function matrix.
+ *
+ * @param eta                The evaluation point on the element
+ * @param poly_ord           The order of the polynomial basis functions
+ * @param coord_vec          The coordinate vector of the element
+ * @param shape_function_type The type of shape functions used
+ * @param centre             The centre of the element
+ * @return                   The B1 matrix
+ */
 Eigen::MatrixXd B1(double eta, int poly_ord, const Eigen::VectorXd &coord_vec,
                    ShapeFunctionType shape_function_type,
                    const Eigen::Vector2d &centre);
+/**
+ * @brief Calculate the B2 matrix.
+ *
+ * This function calculates the B2 matrix based on the given parameters.
+ * The B2 matrix is calculated by multiplying the b2 matrix with the
+ * shape_dN_res matrix.
+ *
+ * @param eta The eta value.
+ * @param poly_ord The polynomial order.
+ * @param coord_vec The coordinate vector.
+ * @param shape_function_type The shape function type.
+ * @param centre The centre vector.
+ *
+ * @returns The B2 matrix.
+ */
+Eigen::MatrixXd B2(double eta, int poly_ord, const Eigen::VectorXd &coord_vec,
+                   ShapeFunctionType shape_function_type,
+                   const Eigen::Vector2d &centre);
+
+/**
+ * @brief Computes the E matrix kernel for a given set of parameters.
+ *
+ * This function computes the E matrix kernel using the provided parameters and
+ * function pointer. The E matrix kernel is calculated by first computing the B
+ * matrix using the given function pointer `B_func`, then calculating the
+ * determinant of the Jacobian matrix `det_J_val` using the `det_j` function.
+ * Finally, the E matrix kernel is obtained by multiplying the determinant of
+ * the Jacobian matrix, the transpose of the B matrix, the DmatParams matrix,
+ * and the B matrix.
+ *
+ * @param eta The eta parameter.
+ * @param poly_ord The polynomial order.
+ * @param coord_vec The coordinate vector.
+ * @param shape_function_type The type of shape function.
+ * @param centre The center vector.
+ * @param DmatParams The DmatParams matrix.
+ * @param B_func Function pointer to compute the B matrix.
+ *
+ * @return The resulting E matrix kernel.
+ */
+Eigen::MatrixXd ComputeEMatrixKernel(
+    double eta, int poly_ord, const Eigen::VectorXd &coord_vec,
+    ShapeFunctionType shape_function_type, const Eigen::Vector2d &centre,
+    const Eigen::MatrixXd &DmatParams,
+    Eigen::MatrixXd (*B_func)(double, int, const Eigen::VectorXd &,
+                              ShapeFunctionType, const Eigen::Vector2d &));
+
+/**
+ * @brief Computes the mixed E matrix kernel.
+ *
+ * @param eta The parameter eta.
+ * @param poly_ord The polynomial order.
+ * @param coord_vec The coordinate vector.
+ * @param shape_function_type The type of shape function.
+ * @param centre The centre vector.
+ * @param DmatParams The DmatParams matrix.
+ * @return The computed E matrix kernel.
+ */
+Eigen::MatrixXd ComputeMixedEMatrixKernel(double eta, int poly_ord,
+                                          const Eigen::VectorXd &coord_vec,
+                                          ShapeFunctionType shape_function_type,
+                                          const Eigen::Vector2d &centre,
+                                          const Eigen::MatrixXd &DmatParams);
 
 #endif // SBFEM_SBFEM_FUNCTIONS_H

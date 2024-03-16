@@ -260,7 +260,7 @@ int main(int argc, char **argv)
     std::cout << "Integral of the second component: " << integralComponent2p
               << std::endl;
 
-    main_loop(sE);
+    main_loop(sE, material_data_list);
 
     return 0;
 }

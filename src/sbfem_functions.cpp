@@ -8,8 +8,6 @@
 #include "sbfem_functions.h"
 #include "sbfem_math.h"
 
-
-
 Eigen::VectorXd resize_and_pad_with_zeros(const Eigen::VectorXd &vec, int n)
 {
     Eigen::VectorXd resized = vec;
@@ -273,7 +271,6 @@ Eigen::Vector2d n_eta(double eta, int poly_ord,
     return n;
 }
 
-// Todo: Implement b1, b2 and Dr
 Eigen::MatrixXd b1(double eta, int poly_ord, const Eigen::VectorXd &coord_vec,
                    ShapeFunctionType shape_function_type,
                    const Eigen::Vector2d &centre)
@@ -330,7 +327,6 @@ Eigen::MatrixXd B1(double eta, int poly_ord, const Eigen::VectorXd &coord_vec,
     return b1mat * shape_N_res;
 }
 
-
 Eigen::MatrixXd B2(double eta, int poly_ord, const Eigen::VectorXd &coord_vec,
                    ShapeFunctionType shape_function_type,
                    const Eigen::Vector2d &centre)
@@ -345,3 +341,45 @@ Eigen::MatrixXd B2(double eta, int poly_ord, const Eigen::VectorXd &coord_vec,
     return b2mat * shape_dN_res;
 }
 
+Eigen::MatrixXd ComputeEMatrixKernel(
+    double eta, int poly_ord, const Eigen::VectorXd &coord_vec,
+    ShapeFunctionType shape_function_type, const Eigen::Vector2d &centre,
+    const Eigen::MatrixXd &DmatParams,
+    Eigen::MatrixXd (*B_func)(double, int, const Eigen::VectorXd &,
+                              ShapeFunctionType, const Eigen::Vector2d &))
+{
+    // Compute B matrix using the provided function pointer B_func
+    Eigen::MatrixXd B =
+        B_func(eta, poly_ord, coord_vec, shape_function_type, centre);
+
+    double det_J_val =
+        det_j(eta, poly_ord, coord_vec, shape_function_type, centre);
+
+    // Perform the operation
+    Eigen::MatrixXd result = det_J_val * B.transpose() * DmatParams * B;
+
+    // Return the resulting matrix
+    return result;
+}
+
+Eigen::MatrixXd ComputeMixedEMatrixKernel(double eta, int poly_ord,
+                                          const Eigen::VectorXd &coord_vec,
+                                          ShapeFunctionType shape_function_type,
+                                          const Eigen::Vector2d &centre,
+                                          const Eigen::MatrixXd &DmatParams)
+{
+    // Compute both B1elIp and B2elIp
+    Eigen::MatrixXd B1_val =
+        B1(eta, poly_ord, coord_vec, shape_function_type, centre);
+    Eigen::MatrixXd B2_val =
+        B2(eta, poly_ord, coord_vec, shape_function_type, centre);
+
+    double det_J_val =
+        det_j(eta, poly_ord, coord_vec, shape_function_type, centre);
+
+    // Perform the mixed operation
+    Eigen::MatrixXd result =
+        det_J_val * B2_val.transpose() * DmatParams * B1_val;
+
+    return result;
+}
